@@ -1,7 +1,8 @@
 const openai = require('./openai');
 const groq = require('./groq');
 const mistral = require('./mistral');
-const google = require('./google');
+const googleGenerative = require('./googleGenerative');
+const togetherAI = require('./togetherai');
 
 async function generateAIResponse(smartResponse, message, phrase) {
     const provider = smartResponse.config.AIProvider || 'openai';
@@ -12,8 +13,10 @@ async function generateAIResponse(smartResponse, message, phrase) {
             return groq.generateResponse(smartResponse, message, phrase);
         case 'mistral':
             return mistral.generateResponse(smartResponse, message, phrase);
-        case 'google':
-            return google.generateResponse(smartResponse, message, phrase);
+        case 'googleGenerative':
+            return googleGenerative.generateResponse(smartResponse, message, phrase);
+        case 'togetherAI':
+            return togetherAI.generateResponse(smartResponse, message, phrase);
         default:
             throw new Error(`Unsupported AI provider: ${provider}`);
     }
