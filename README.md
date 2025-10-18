@@ -10,21 +10,6 @@
 - Discord modal and button interactions
 - Conversation cache with timeout management
 
-## Installation
-
-1. Clone the repository:
-
-```bash
-git clone <repository-url>
-cd <repository-folder>
-````
-
-2. Install Node.js dependencies:
-
-```bash
-npm install
-```
-
 > The bot automatically installs any missing modules on first run.
 
 3. Configure your `config.yml` with your AI provider keys and bot settings.
