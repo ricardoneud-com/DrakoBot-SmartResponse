@@ -7,19 +7,16 @@ SmartResponses:
     WhitelistedCategories: []
   Providers:
     OpenAI:
-      Enabled: true
       APIKey: "openai_api_key"
       Model: "gpt-4o-mini"
       Temperature: 0.8
       MaxTokens: 2000
     Groq:
-      Enabled: false
       APIKey: "groq_api_key"
       Model: "llama-3.3-70b-versatile"
       Temperature: 0.8
       MaxTokens: 2000
     Mistral:
-      Enabled: false
       APIKey: "mistral_api_key"
       Model: "mistral-small-latest"
       Temperature: 0.8
