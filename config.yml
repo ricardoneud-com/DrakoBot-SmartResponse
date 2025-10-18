@@ -1,0 +1,119 @@
+SmartResponses:
+  Enabled: true
+  AIProvider: "openai"
+  Triggers:
+    RequireMention: true
+    WhitelistedChannels: []
+    WhitelistedCategories: []
+  Providers:
+    OpenAI:
+      Enabled: true
+      APIKey: "openai_api_key"
+      Model: "gpt-4o-mini"
+      Temperature: 0.8
+      MaxTokens: 2000
+    Groq:
+      Enabled: false
+      APIKey: "groq_api_key"
+      Model: "llama-3.3-70b-versatile"
+      Temperature: 0.8
+      MaxTokens: 2000
+    Mistral:
+      Enabled: false
+      APIKey: "mistral_api_key"
+      Model: "mistral-small-latest"
+      Temperature: 0.8
+      MaxTokens: 2000
+  SystemPrompt: |
+    You are DrakoBot, a multi-purpose Discord bot created by Drako Development.
+    About DrakoBot:
+    - A versatile Discord bot with moderation, utility, and development assistance features
+    - Built with Node.js and Discord.js
+    - Uses MongoDB for data storage
+    - Supports custom addons and plugins
+    - Includes ticket system, moderation tools, and smart responses
+    Communication Guidelines:
+    1. Start with a friendly greeting or acknowledgment
+    2. Use clear, simple language
+    3. Break down complex topics into digestible steps
+    4. Only show code examples when explicitly requested
+    5. Focus on explaining concepts rather than dumping code
+    When helping with DrakoBot setup:
+    1. Explain that DrakoBot is already built and ready to use
+    2. Guide users through the configuration process:
+       - Where to find existing config files
+       - How to modify existing settings
+       - How to use existing features
+    3. Never suggest creating new files or starting from scratch
+    4. Focus on using and configuring the existing bot
+    Remember: You are the existing DrakoBot instance. Users are asking about setting up and using your existing features, not creating a new bot.
+  InternalDataSources:
+    - "./resources/docs"
+    - "./resources/wiki"
+    - "./resources/knowledge_base"
+  Phrases:
+    Help:
+      Phrase:
+        - "help"
+        - "how do i use"
+        - "what can you do"
+        - "commands"
+        - "features"
+      MatchPercent: 0.70
+      Type: "SMART"
+      AdvancedAnalysis:
+        SynonymThreshold: 0.60
+        ContextualAnalysis: true
+    Setup:
+      Phrase:
+        - "setup"
+        - "install"
+        - "configure"
+        - "installation"
+        - "getting started"
+        - "how to setup"
+        - "how to install"
+      MatchPercent: 0.70
+      Type: "SMART"
+      AdvancedAnalysis:
+        SynonymThreshold: 0.60
+        ContextualAnalysis: true
+    Ping:
+      Phrase:
+        - "ping"
+        - "test"
+        - "are you there"
+        - "hello"
+      MatchPercent: 0.80
+      Type: "TEXT"
+      Response: "🏓 Pong! I'm here and ready to help!"
+      AdvancedAnalysis:
+        SynonymThreshold: 0.70
+        ContextualAnalysis: false
+    Status:
+      Phrase:
+        - "status"
+        - "info"
+        - "about"
+        - "system info"
+      MatchPercent: 0.75
+      Type: "EMBED"
+      Embed:
+        Title: "🤖 Drako Bot Status"
+        Description: "Here's my current status and information"
+        Fields:
+          - Name: "Version"
+            Value: "2.0.0"
+            Inline: true
+          - Name: "Uptime"
+            Value: "{uptime}"
+            Inline: true
+          - Name: "Features"
+            Value: "✅ Smart Responses\n✅ Moderation\n✅ Ticket System"
+            Inline: false
+        Footer:
+          Text: "Drako Bot by Drako Development"
+        Color: "#00ff00"
+      AdvancedAnalysis:
+        SynonymThreshold: 0.60
+        ContextualAnalysis: false
