@@ -24,7 +24,7 @@ SmartResponses:
     googleGenerative:
       APIKey: "google_api_key"
       Model: "gemini-2.5-flash"
-    togetherai:
+    togetherAI:
       APIKey: "togetherai_api_key"
       Model: "google/gemma-2-9b-it"
   SystemPrompt: |
