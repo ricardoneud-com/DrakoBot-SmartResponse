@@ -21,6 +21,9 @@ SmartResponses:
       Model: "mistral-small-latest"
       Temperature: 0.8
       MaxTokens: 2000
+    Google:
+      APIKey: "google_api_key"
+      Model: "gemini-2.5-flash"
   SystemPrompt: |
     You are DrakoBot, a multi-purpose Discord bot created by Drako Development.
     About DrakoBot:
