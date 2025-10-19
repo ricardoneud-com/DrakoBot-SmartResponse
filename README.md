@@ -128,4 +128,3 @@ natural, fs, path, js-yaml, discord.js,
 
 ## Credits
 - **John** – Owner of **Drako Bot** and original creator of **SmartResponse**.
-- **SmartResponse Extensions** – Added support for multiple AI providers via Vercel AI SDK.
