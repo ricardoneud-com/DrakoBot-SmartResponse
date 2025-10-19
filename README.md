@@ -12,29 +12,6 @@
 
 > **Note:** The bot automatically installs missing modules on first run.
 
-## Project Structure
-```
-.
-├── response.js          # Main SmartResponse class
-├── providers/           # AI provider integrations
-│   ├── openai.js        # OpenAI provider logic
-│   ├── groq.js          # Groq provider logic
-│   ├── mistral.js       # Mistral provider logic
-│   └── index.js         # Exports all providers
-├── utils/               # Utility functions
-│   ├── file.js          # File/directory utilities
-│   ├── text.js          # Text processing utilities
-│   ├── ui.js            # UI component utilities
-│   └── index.js         # Exports all utilities
-├── resources/           # Internal knowledge base
-│   ├── docs/            # Documentation files
-│   ├── wiki/             # Wiki articles
-│   ├── knowledge_base/  # Structured knowledge
-│   └── profile.md       # Bot personality profile
-├── config.yml           # Configuration file
-└── index.js             # Entry point (Discord bot integration)
-```
-
 ## Configuration
 The main configuration file is `config.yml`. Key sections:
 
