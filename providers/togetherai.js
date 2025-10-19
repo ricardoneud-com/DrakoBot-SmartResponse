@@ -8,14 +8,14 @@ async function generateResponse(smartResponse, message, phrase) {
         const profilePath = path.join(__dirname, '../resources', 'profile.md');
         const personalityProfile = await fs.readFile(profilePath, 'utf8');
         const relevantDocs = await smartResponse.findRelevantInternalData(message.content);
-        const instance = createTogetherAI({ apiKey: smartResponse.config.Providers.togetherAI.APIKey });
+        const instance = createTogetherAI({ apiKey: smartResponse.config.Providers.TogetherAI.APIKey });
         const systemInstructions = `${smartResponse.config.SystemPrompt}\n\nHere is your personality profile and core knowledge:\n${personalityProfile}\n\nWhen providing multi-step guidance:\n1. Break your response into clear, numbered steps\n[STEP_1] First step content here...\n[STEP_2] Second step content here...\nAnd so on...\n3. Each step should be self-contained and clear\n4. Keep each step concise but informative\n5. If your response requires multiple steps, include [HAS_NEXT_STEPS] at the start\n`;
         const messages = [{ role: 'system', content: systemInstructions }];
         if (relevantDocs.length > 0) {
             messages.push({ role: 'system', content: 'Here is some relevant internal documentation to help with this query:\n\n' + relevantDocs.join('\n---\n') });
         }
         messages.push({ role: 'user', content: message.content });
-        const model = instance(smartResponse.config.Providers.togetherAI.Model);
+        const model = instance(smartResponse.config.Providers.TogetherAI.Model);
         const { text: content } = await generateText({
             model,
             messages
