@@ -29,6 +29,7 @@ const modules = [
     '@ai-sdk/groq',
     '@ai-sdk/mistral',
     '@ai-sdk/google',
+    '@ai-sdk/togetherai',
     'ai'
 ];
 modules.forEach(ensureModule);
