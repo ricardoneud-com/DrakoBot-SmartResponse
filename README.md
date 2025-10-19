@@ -114,13 +114,6 @@ Include the new provider in `providers/index.js`:
 
 ```javascript
 const anthropic = require('./anthropic');
-
-module.exports = {
-  openai,
-  groq,
-  mistral,
-  anthropic
-};
 ```
 
 ### **Step 4: Update SmartResponse Logic**
