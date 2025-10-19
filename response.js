@@ -17,11 +17,18 @@ class SmartResponse {
         this.tfidf = new natural.TfIdf();
         this.stemmer = natural.PorterStemmer;
         this.stringSimilarity = natural.JaroWinklerDistance;
+        console.log('[INFO] SmartResponse instance created.');
     }
 
     async initialize() {
-        await utils.file.ensureDirectories();
-        await this.loadInternalData();
+        try {
+            console.log('[INFO] Initializing SmartResponse...');
+            await utils.file.ensureDirectories();
+            await this.loadInternalData();
+            console.log('[INFO] SmartResponse initialization complete.');
+        } catch (error) {
+            console.error('[ERROR] Initialization failed:', error);
+        }
     }
 
     async loadInternalData() {
@@ -29,163 +36,148 @@ class SmartResponse {
             try {
                 const files = await utils.file.recursiveReadDir(source);
                 for (const file of files) {
-                    const content = await fs.readFile(file, 'utf8');
-                    this.internalData.set(file, content);
+                    try {
+                        const content = await fs.readFile(file, 'utf8');
+                        this.internalData.set(file, content);
+                    } catch (fileError) {
+                        console.error(`[ERROR] Failed to read internal file ${file}:`, fileError);
+                    }
                 }
             } catch (error) {
-                console.error(`Error loading internal data from ${source}:`, error);
+                console.error(`[ERROR] Error loading internal data from ${source}:`, error);
             }
         }
     }
 
     async processMessage(message) {
-        if (!message || !message.content || message.author?.bot) {
+        try {
+            if (!message || !message.content || message.author?.bot) return null;
+            const cleanContent = utils.text.cleanMessageContent(message);
+            const phrase = this.findMatchingPhrase(cleanContent);
+            if (!phrase) return null;
+
+            if (phrase.Type === 'TEXT') return { type: 'TEXT', content: phrase.Response };
+            if (phrase.Type === 'EMBED') return { type: 'EMBED', embed: phrase.Embed };
+            if (phrase.Type === 'SMART') return providers.generateAIResponse(this, message, phrase);
+            return null;
+        } catch (error) {
+            console.error('[ERROR] processMessage failed:', error);
             return null;
         }
-        const cleanContent = utils.text.cleanMessageContent(message);
-        const phrase = this.findMatchingPhrase(cleanContent);
-        if (!phrase) {
-            return null;
-        }
-        if (phrase.Type === 'TEXT') {
-            return { type: 'TEXT', content: phrase.Response };
-        } else if (phrase.Type === 'EMBED') {
-            return { type: 'EMBED', embed: phrase.Embed };
-        } else if (phrase.Type === 'SMART') {
-            return providers.generateAIResponse(this, message, phrase);
-        }
-        return null;
-    }
-
-    isAllowedChannel(message) {
-        const globalChannels = this.config.Triggers.WhitelistedChannels;
-        const globalCategories = this.config.Triggers.WhitelistedCategories;
-        if (globalChannels.length === 0 && globalCategories.length === 0) {
-            return true;
-        }
-        if (globalChannels.includes(message.channel.id)) {
-            return true;
-        }
-        if (message.channel.parent && globalCategories.includes(message.channel.parent.id)) {
-            return true;
-        }
-        return false;
-    }
-
-    isPhraseAllowedInChannel(phrase, message) {
-        if (!phrase.Channels && !phrase.Categories) {
-            return true;
-        }
-        if (phrase.Channels && phrase.Channels.length > 0) {
-            if (phrase.Channels.includes(message.channel.id)) {
-                return true;
-            }
-        }
-        if (phrase.Categories && phrase.Categories.length > 0) {
-            if (message.channel.parent && phrase.Categories.includes(message.channel.parent.id)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    isMentionValid(message) {
-        const globalRequireMention = this.config.Triggers.RequireMention;
-        if (!globalRequireMention) {
-            return true;
-        }
-        const botMention = `<@${message.client.user.id}>`;
-        const botNickMention = `<@!${message.client.user.id}>`;
-        return message.content.includes(botMention) || message.content.includes(botNickMention);
     }
 
     findMatchingPhrase(message) {
-        const messageTokens = this.tokenizer.tokenize(message.toLowerCase());
-        let bestMatch = null;
-        let highestScore = 0;
-        for (const [key, phraseConfig] of Object.entries(this.config.Phrases)) {
-            for (const phrase of phraseConfig.Phrase) {
-                const phraseTokens = this.tokenizer.tokenize(phrase.toLowerCase());
-                const isDirectMatch = utils.text.isExactPhraseMatch(message, phrase);
-                const exactMatchScore = this.stringSimilarity(message.toLowerCase(), phrase.toLowerCase());
-                const stemmedScore = utils.text.calculateStemmedSimilarity(this.stemmer, messageTokens, phraseTokens);
-                const semanticScore = utils.text.calculateSemanticSimilarity(this.tfidf, messageTokens, phraseTokens);
-                let totalScore = (exactMatchScore * 0.5) + (stemmedScore * 0.3) + (semanticScore * 0.2);
-                if (isDirectMatch) {
-                    totalScore = Math.max(totalScore, phraseConfig.MatchPercent);
-                }
-                if (totalScore >= phraseConfig.MatchPercent && totalScore > highestScore) {
-                    highestScore = totalScore;
-                    bestMatch = phraseConfig;
+        try {
+            const messageTokens = this.tokenizer.tokenize(message.toLowerCase());
+            let bestMatch = null;
+            let highestScore = 0;
+
+            for (const [key, phraseConfig] of Object.entries(this.config.Phrases)) {
+                for (const phrase of phraseConfig.Phrase) {
+                    const phraseTokens = this.tokenizer.tokenize(phrase.toLowerCase());
+                    const isDirectMatch = utils.text.isExactPhraseMatch(message, phrase);
+                    const exactMatchScore = this.stringSimilarity(message.toLowerCase(), phrase.toLowerCase());
+                    const stemmedScore = utils.text.calculateStemmedSimilarity(this.stemmer, messageTokens, phraseTokens);
+                    const semanticScore = utils.text.calculateSemanticSimilarity(this.tfidf, messageTokens, phraseTokens);
+                    let totalScore = (exactMatchScore * 0.5) + (stemmedScore * 0.3) + (semanticScore * 0.2);
+
+                    if (isDirectMatch) totalScore = Math.max(totalScore, phraseConfig.MatchPercent);
+
+                    if (totalScore >= phraseConfig.MatchPercent && totalScore > highestScore) {
+                        highestScore = totalScore;
+                        bestMatch = phraseConfig;
+                    }
                 }
             }
+
+            return bestMatch;
+        } catch (error) {
+            console.error('[ERROR] findMatchingPhrase failed:', error);
+            return null;
         }
-        return bestMatch;
     }
 
     async findRelevantInternalData(query) {
-        const relevantDocs = [];
-        const queryWords = new Set(query.toLowerCase().split(/\s+/).filter(word => word.length > 3));
-        for (const [file, content] of this.internalData.entries()) {
-            const contentWords = new Set(content.toLowerCase().split(/\s+/));
-            const matchingWords = [...queryWords].filter(word =>
-                [...contentWords].some(contentWord => contentWord.includes(word))
-            );
-            const relevanceScore = matchingWords.length / queryWords.size;
-            if (relevanceScore > 0.3) {
-                relevantDocs.push(content);
+        try {
+            const relevantDocs = [];
+            const queryWords = new Set(query.toLowerCase().split(/\s+/).filter(word => word.length > 3));
+
+            for (const [file, content] of this.internalData.entries()) {
+                const contentWords = new Set(content.toLowerCase().split(/\s+/));
+                const matchingWords = [...queryWords].filter(word =>
+                    [...contentWords].some(contentWord => contentWord.includes(word))
+                );
+                const relevanceScore = matchingWords.length / queryWords.size;
+                if (relevanceScore > 0.3) relevantDocs.push(content);
             }
+
+            return relevantDocs.slice(0, 3);
+        } catch (error) {
+            console.error('[ERROR] findRelevantInternalData failed:', error);
+            return [];
         }
-        return relevantDocs.slice(0, 3);
     }
 
     async handleStepProgression(interaction) {
-        const cacheKey = interaction.channel.id + interaction.user.id;
-        const conversationState = conversationCache.get(cacheKey);
-        if (!conversationState) {
-            return {
-                content: "I'm sorry, but I couldn't find the context of our conversation. Could you please ask your question again?",
-                hasMoreSteps: false
-            };
+        try {
+            const cacheKey = interaction.channel.id + interaction.user.id;
+            const conversationState = conversationCache.get(cacheKey);
+
+            if (!conversationState) return { content: "Couldn't find conversation context.", hasMoreSteps: false };
+
+            if (Date.now() - conversationState.timestamp > 30 * 60 * 1000) {
+                conversationCache.delete(cacheKey);
+                return { content: "Conversation timed out.", hasMoreSteps: false };
+            }
+
+            conversationState.currentStep++;
+            conversationState.timestamp = Date.now();
+            const hasMoreSteps = conversationState.currentStep < conversationState.steps.length - 1;
+            if (!hasMoreSteps) conversationCache.delete(cacheKey);
+
+            return { content: conversationState.steps[conversationState.currentStep], hasMoreSteps };
+        } catch (error) {
+            console.error('[ERROR] handleStepProgression failed:', error);
+            return { content: "An error occurred while progressing the conversation.", hasMoreSteps: false };
         }
-        if (Date.now() - conversationState.timestamp > 30 * 60 * 1000) {
-            conversationCache.delete(cacheKey);
-            return {
-                content: "I apologize, but our conversation has timed out. Could you please ask your question again?",
-                hasMoreSteps: false
-            };
-        }
-        conversationState.currentStep++;
-        conversationState.timestamp = Date.now();
-        const hasMoreSteps = conversationState.currentStep < conversationState.steps.length - 1;
-        if (!hasMoreSteps) {
-            conversationCache.delete(cacheKey);
-        }
-        return {
-            content: conversationState.steps[conversationState.currentStep],
-            hasMoreSteps
-        };
     }
 
     cleanupOldConversations() {
-        const thirtyMinutes = 30 * 60 * 1000;
-        for (const [key, value] of conversationCache.entries()) {
-            if (Date.now() - value.timestamp > thirtyMinutes) {
-                conversationCache.delete(key);
+        try {
+            const thirtyMinutes = 30 * 60 * 1000;
+            for (const [key, value] of conversationCache.entries()) {
+                if (Date.now() - value.timestamp > thirtyMinutes) conversationCache.delete(key);
             }
+        } catch (error) {
+            console.error('[ERROR] cleanupOldConversations failed:', error);
         }
     }
 
     createMessageButtons(hasNextSteps) {
-        return utils.ui.createMessageButtons(hasNextSteps);
+        try {
+            return utils.ui.createMessageButtons(hasNextSteps);
+        } catch (error) {
+            console.error('[ERROR] createMessageButtons failed:', error);
+            return [];
+        }
     }
 
     createQuestionModal() {
-        return utils.ui.createQuestionModal();
+        try {
+            return utils.ui.createQuestionModal();
+        } catch (error) {
+            console.error('[ERROR] createQuestionModal failed:', error);
+            return null;
+        }
     }
 
     splitMessage(content, maxLength = 2000) {
-        return utils.text.splitMessage(content, maxLength);
+        try {
+            return utils.text.splitMessage(content, maxLength);
+        } catch (error) {
+            console.error('[ERROR] splitMessage failed:', error);
+            return [content];
+        }
     }
 }
 
