@@ -21,10 +21,10 @@ SmartResponses:
       Model: "mistral-small-latest"
       Temperature: 0.8
       MaxTokens: 2000
-    googleGenerative:
+    GoogleGenerative:
       APIKey: "google_api_key"
       Model: "gemini-2.5-flash"
-    togetherAI:
+    TogetherAI:
       APIKey: "togetherai_api_key"
       Model: "google/gemma-2-9b-it"
   SystemPrompt: |
